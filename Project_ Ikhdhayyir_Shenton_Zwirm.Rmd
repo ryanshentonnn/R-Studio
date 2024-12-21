@@ -1,0 +1,243 @@
+---
+title: "Final Project - DATS 1001"
+author: "Maryam Ikhdhayyir, Ryan Shenton, Rachel Zwirm"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(warning = F, results = "hide", message = F)
+```
+
+![Teen Party. https://thehillnews.org/opinions/marin-murphy/views-social-conformity/attachment/16-oz-red-solo-cups-high-quality-plastic-beer-cups-party-cups-fun-party-drinking-game-jpg_640x640](DS Photo 1.jpg) 
+
+## How may sex, quality of family relationships, attendance, and grades serve as indicators for weekend alcohol consumption of students?
+
+## Introduction
+Our team decided to look at a dataset that contained lots of information about students in a math class in secondary school and their alcohol consumption and different elements of their lives. Alcohol consumption is a serious issue among kids this age even though it has been declining in recent years. We analyzed the relationship between the amount of alcohol consumption among these children and which variables are impacted by or influenced by the consumption of alcohol. Our **SMART question** we used to develop our research was how grades, absences, gender and family relationships influenced alcohol consumption in students in secondary school. By using these four variables we can look at categorical and numeric variables and their relationship to alcohol consumption.   
+
+*Children in secondary school admitted to using alcohol at least once in the past month at a rate of 29% according to the National Center for Education Statistics.* Our group wanted to look at how alcohol consumption impacted various areas of these students' lives as a potential **cautionary message** to either avoid or reduce alcohol impact. 
+
+## Dataset
+```{r}
+student_mat <- data.frame(read.csv('student-mat.csv'))
+
+alcOne = subset.data.frame(student_mat, Walc == 1)
+alcTwo = subset.data.frame(student_mat, Walc == 2)
+alcThree = subset.data.frame(student_mat, Walc == 3)
+alcFour = subset.data.frame(student_mat, Walc == 4)
+alcFive = subset.data.frame(student_mat, Walc == 5)
+```
+**Name: Student Alcohol Consumption** https://www.kaggle.com/datasets/uciml/student-alcohol-consumption/ 
+
+From the total of 395 observations in the data set and five levels of weekend alcohol consumption (1 being lowest volume consumed and 5 being highest volume consumed), we found **`r nrow(alcOne)`** level one, **`r nrow(alcTwo)`** level two, **`r nrow(alcThree)`** level three, **`r nrow(alcFour)`** level four, and **`r nrow(alcFive)`** level five drinkers.
+
+Y variable: Weekend Alcohol Consumption.
+
+X variables: Sex, Family Relationship Status, Attendance, and Grades.
+
+We acknowledge that because only 28 people in our data were level five weekend alcohol consumers, it was an *imbalanced data set*.
+
+Since we wanted to find out how likely a student is to consume alcohol based on sex, quality of family relationships, attendance, and grades, in the initial tests and data exploration we wanted to visualize the correlation between alcohol consumption and some of the variables that might influence it and/or be influenced by it.
+
+
+```{r}
+library(ezids)
+library(dplyr)
+library(ggplot2)
+
+# Summarize alcohol consumption by sex
+sex_summary <- student_mat %>%
+  group_by(sex, Walc) %>%
+  summarize(count = n()) %>%
+  mutate(proportion = count / sum(count))
+
+print(sex_summary)
+
+# Create a contingency table
+sex_alc_table <- table(student_mat$sex, student_mat$Walc)
+
+# Density plot to compare age distributions
+ggplot(student_mat, aes(x = Walc, fill = sex)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Alcohol Consumption by Sex", x = "Alcohol Consumption", y = "Density")
+```
+For this first predictor variable, `sex`, we explored density plots as a form of presentation. Although, upon inspection of the graph, the x-variable may not be a discrete one. With `weekend alcohol consumption` (categorical variable with 5 factor levels) on the x-axis, there is uncertainty about the behavior of each density curve between each integer level. Therefore, the density plot can not be an accurate presentation for this correlation.
+
+```{r}
+# Perform chi-squared test
+chi_squared_result <- chisq.test(sex_alc_table)
+print(chi_squared_result)
+```
+### Barplots
+```{r}
+library(ggplot2)
+Walc_cat = factor(student_mat$Walc)
+
+ggplot(student_mat, aes(x = sex, fill =Walc_cat)) +
+  geom_bar(stat = 'count', position = 'dodge') +
+  labs(title = "Barplot of Alcohol Consumption and Gender",fill='Weekend Alcohol consumption', x = "Gender", y = "Number of Students")
+
+ggplot(student_mat, aes(x = famrel, fill =Walc_cat)) +
+  geom_bar(stat = 'count', position = 'dodge') +
+  labs(title = "Barplot of Alcohol Consumption and Quality of Family Relationship", fill='Weekend Alcohol consumption', x = "Quality of Family Relationships", y =" Number of Students")
+```
+
+### Density Plots and Boxplots
+```{r}
+student_mat$Walc = factor(student_mat$Walc)
+ggplot(student_mat, aes(x = absences, fill = Walc)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Absences by Alcohol Consumption", x = "Absences", y = "Density")
+```
+With the variable, `absences`, which is continuous and the `weekend alcohol consumption` response variable, which is categorical, the density plot is certainly an applicable presentation for the data. It is clear to see that the peaks of each curve shift further right as the level of alcohol consumption increases. Level 1 peaks closest to and level 5 furthest from zero absences, for example. However, the only disadvantage to using a density plot for a factor variable with many levels is the **decreased capacity for interpretation**.
+
+```{r}
+student_mat$absences = as.integer(student_mat$absences)
+
+ggplot(student_mat, aes(x = Walc, y = absences, fill = Walc)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Absences by Alcohol Consumption Status", x = "Level Alcohol Consumption", y = "Absences")
+```
+This boxplot representing the same data with the variables absences and alcohol consumption conveys similar findings to those of the density plot. Unlike the previous presentation though, the boxplot allows viewers to immediately see the transformation of mean absences in each of the 5 alcohol consumption levels. 
+
+```{r}
+ggplot(student_mat, aes(x = G2, fill = Walc)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plot of Grades by Alcohol Consumption", x = "Grade", y = "Density")
+```
+
+```{r}
+ggplot(student_mat, aes(x = Walc, y = G2, fill = Walc)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Grades by Alcohol Consumption Status", x = "Level Alcohol Consumption", y = "Grade")
+```
+Similarly, we've presented `grades` and alcohol consumption with a density plot and a boxplot. This time, more clearly, we realize the struggle to make out characteristics of each curve on the density plot. The peaks of each curve on the density plot are harder to distinguish, for example, making it more to difficult to draw meaningful conclusions. In the subsequent presentation, it is clear to see that the mean grades among each weekend alcohol consumption level decrease as the level of consumption increases. These two variables have a **negative correlation:** *the more a student drinks, the worse they score in class*, according to the collected data.
+
+```{r}
+student_mat$G3 = factor(student_mat$G3)
+
+student_mat$absences = factor(student_mat$absences)
+overconsumption = subset.data.frame(student_mat, Walc == 5)
+norm_consumption = subset.data.frame(student_mat, Walc == 1)
+
+# Create a contingency table
+grades_alc_table <- table(student_mat$G3, student_mat$Walc)
+
+# Perform chi-squared test
+chi_squared_result <- chisq.test(grades_alc_table)
+print(chi_squared_result)
+```
+
+```{r}
+#hist(student_mat$Walc, student_mat$sex, main = "Histogram for Sex and Weekend Alcohol Cosumption ", xlab = "sex", col = 'blue' )
+
+#ggplot(student_mat, aes(x = sex, fill = Walc)) +
+#  geom_histogram(binwidth = 5, position = "dodge") +
+#  labs(title = "Weekend Alcohol Consumption by Sex", x = "Sex", y = "Count")
+
+#hist(student_mat$higher, student_mat$Walc, main = "Histogram for Higher Education and Alcohol Cosumption ", xlab = "higher", col = 'blue' )
+
+```
+
+## Results & Interpretation
+
+According to our dataset, more female students reported less alcohol consumption than their male counterparts. However, there were more female students surveyed so this may not be an accurate measure of if sex leads to a higher consumption of alcohol. In addition to this, there were more male students among different levels of alcohol consumption while female students were on the lower end. 
+
+When we looked at the relationship between absences and alcohol consumption we looked at the average amounts of absences reported that corresponded with the ratings of alcohol consumption on a scale of 1 to 5. By looking at our boxplot you can see that as the rating of alcohol consumption grew so did the mean number of absences that students reported (**positive correlation**). 
+
+These results were similar among grades as well. There was a **negative correlation** with the amount a student drank and the worse they performed in school. This highlights a strong relationship between alcohol consumption and a student’s absences and grades. 
+We can interpret from this data that as a result of alcohol consumption students are more likely to either perform badly in school or not attend which can lead to negative outcomes in their academics and future.
+
+### Prediction
+
+**Logistic Regression**
+
+```{r}
+library(pscl)
+library(pROC)
+
+student_mat$Walc = factor(student_mat$Walc)
+student_mat$absences = as.integer(student_mat$absences)
+
+# Build the logistic regression model
+logit_model <- glm(Walc ~ sex + famrel + absences + G2, data = student_mat, family = binomial)
+summary(logit_model)
+
+# Predict probabilities
+predicted_probs <- predict(logit_model, type = "response")
+
+# Convert probabilities to binary outcome
+predicted_classes <- ifelse(predicted_probs > 0.5, 1, 0)
+
+# Create confusion matrix
+confusion_matrix <- table(predicted_classes, student_mat$Walc)
+print(confusion_matrix)
+
+# Calculate accuracy
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Accuracy:", accuracy))
+
+# Generate ROC curve and calculate AUC
+roc_curve <- roc(student_mat$Walc, predicted_probs)
+plot(roc_curve)
+auc_value <- auc(roc_curve)
+print(paste("AUC:", auc_value))
+```
+We also made arbitrary predictions using the dataset to predict the chance of alcohol overconsumption or binge drinking, which we defined as level 5 weekend alcohol consumption... The results show that:
+
+```{r}
+# Define the new data point
+new_data <- data.frame(sex = "M", famrel = 3, absences = 6, G2 = 10)
+
+# Predict the probability of level 5 drinking
+predicted_probability <- predict(logit_model, newdata = new_data, type = "response")
+print(paste("Predicted probability of level 5 drinking:", predicted_probability))
+```
+
+For a male student with level 3 (middle tier) family relationships, 6 absences, and a midterm grade of 10... **`r predicted_probability`** or **76.2% chance of overconsumption**.
+
+```{r}
+# Define the new data point
+new_data <- data.frame(sex = "F", famrel = 5, absences = 4, G2 = 11)
+
+# Predict the probability of level 5 drinking
+predicted_probability1 <- predict(logit_model, newdata = new_data, type = "response")
+print(paste("Predicted probability of level 5 drinking:", predicted_probability1))
+```
+
+For a female student with level 5 (high tier) family relationships, 4 absences, and a midterm grade of 11... **`r predicted_probability1`** or **44.4% chance of overconsumption**.
+
+```{r}
+# Define the new data point
+new_data <- data.frame(sex = "F", famrel = 4, absences = 0, G2 = 18)
+
+# Predict the probability of level 5 drinking
+predicted_probability1 <- predict(logit_model, newdata = new_data, type = "response")
+print(paste("Predicted probability of level 5 drinking:", predicted_probability1))
+```
+
+For a female student with level 4 (second highest tier) family relationships, 0 absences, and a midterm grade of 18... **`r predicted_probability1`** or **38.2% chance of overconsumption**.
+
+These three sets of predictions tell us that although `sex` does play a heavy role in chance of overconsumption, having a *good academic record may still be a good predictor for less binge drinking*.
+
+### Social Good
+
+![Binge Drinking Infographic.       https://parenthetical.wisc.edu/2017/09/18/protecting-your-teen-from-the-national-alcohol-crisis/](Picture1.jpg)
+
+
+Absences and grades were predictors of alcohol use among students. A student who had a higher amount of absences and lower grades were more likely to consume alcohol. 
+
+We want students to continue to drink responsibly so that they can continue to succeed in all aspects of their lives at school and at home and to maintain healthy relationships. Since overconsumption of alcohol can lead to higher amounts of absences and grades it is best to reduce alcohol consumption among secondary school students in order for them to perform better in school. 
+
+If you see someone showing signs of substance abuse or an impact on alcohol consumption on your life or a friend’s, please contact a trusted adult and get help. If we consume alcohol safely we can all mitigate potential dangers that occur with underage consumption.
+
