@@ -1,1 +1,1 @@
-This project for my Data Visualization class required that we seek online data, access it in RStudio, utilize the R programming package ggplot, and explain the benefits and costs of a variety of visualization methods. Although mostly univariate graphs, the experience of working with ggplot allowed me to create the best visualizations for both numeric and factor variables, discussing why some were better than others, and experiment with the various geom structures within the ggplot library.
+
