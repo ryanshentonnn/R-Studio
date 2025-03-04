@@ -1,0 +1,161 @@
+---
+title: "Graphing Single Variables Project"
+author: "Ryan Shenton"
+format: html
+editor: source
+theme: cosmo
+fontsize: 16px
+---
+
+``` {r library}
+library(tidyverse)
+
+marathon = read.csv("/Users/ryanshenton/Documents/1school/Spring 2025/Viz/dataviz-spring2025-organizing-folder/3. Graphing single variables/NYC Marathon Results, 2024.csv")
+```
+
+Dataset
+-
+The dataset that I am choosing to complete a preliminary exploration of is the New York City Marathon Results dataset. The data was scraped from the New York Road Runner's website by researcher and data analyst Joe Hovde. Since I ran cross country in high school, I am better able to contextualize and appreciate the overall times and paces. For this same reason, I find myself interested to explore different trends in the data. For example, Hovde has published an [article](https://residualthoughts.substack.com/p/marcelo-and-karolina-the-fastest) answering interesting questions such as how does average mile pace vary by age group and how does average mile pace vary by the runners' home city.
+
+#### Citation
+Hovde, J. (2024). NYC Marathon Results, November 2024. New York City, NY: New York Road Runners.
+
+Numeric Variable
+-
+### Trends in the Data
+
+The marathon runners' ages are slightly skewed right on the histogram, indicating that the runners tended to be younger. However, there were not many runners in their early twenties or younger it seems. The sharp increase between runners in their early twenties to runners in their mid twenties aligns with the fact that runners must be at least 18 years old on race day and preparation for the race can sometimes require years of consistent effort. To further explain this increase, we might be able to hypothesize that people in their late teens and early twenties do not have the time to focus on marathon prep amidst college and career priorities. Although the data is skewed right, the mean running age sits at nearly forty-years-old. Notably, there are still many people above the age of forty participating in the race, despite the mode age range being twenty-eight to twenty-nine. Generally, the higher we climb in ages, the less runners we see of that age demographic; the graphs seem to trail off in the late seventies, albeit there are still some runners.
+
+### Histogram
+``` {r numeric_hist}
+ggplot(marathon, aes(x=age)) +
+  geom_histogram(fill = "mediumpurple", color = "white") +
+  #geom_freqpoly(color = "darkolivegreen") +
+  xlim(10,80) +
+  labs(title = "Age Distribution of NYC Marathon Runners",
+       x = "Age",
+       y = "Count") +
+  theme_minimal()
+```
+
+#### Advantages & Disadvantages of the Histogram
+
+The histogram offers a clear view of the mode age of runners, which appears to be in the late twenties. The histogram also allows us to interpret skewness of the data, indicating whether the runners trend older or younger, and makes frequency counts easily accessible.
+
+Conversely, the histogram is not adept revealing the mean and other quartiles of the data. The process of binning the data or making discrete groups may also affect what results we extract from the graph. For example, it appears that twenty-nine is the mode age, but we cannot be sure without specified ranges (we lose granularity).
+
+
+### Boxplot
+```{r numeric_box}
+ggplot(marathon, aes(y = age)) + 
+  geom_boxplot(fill = "tomato", alpha = 0.8, color = "darkred") +
+  coord_flip() +
+  ylim(10,80) +
+  labs(title = "Age Distribution of Marathon Runners",
+       x = "", y = "Age") +
+  theme_minimal()
+```
+
+#### Advantages & Disadvantages of the Boxplot
+
+Unlike the histogram, the boxplot more clearly shows the quartile values of the data, particularly the mean. From the boxplot, we can determine that the mean age of runners is just under forty-year-old. The boxplot also addresses outliers in the data, represented by dots hanging off the central line. On the other hand, like the histogram, the boxplot also indicates skewness by observing the lengths of the whiskers on either side of the box.
+
+Just as the boxplot is advantaged by its differences from the histogram, it is also disadvantaged in some ways. Unlike the histogram, the boxplot does not clearly show the distribution shape of the data.
+
+### Density Plot
+```{r numeric_dens}
+ggplot(marathon, aes(x = age)) + 
+  geom_density(fill = "steelblue", alpha = 0.8) +
+  labs(title = "Age Distribution of Marathon Runners",
+       x = "Age", y = "Density") +
+  theme_minimal()
+```
+
+#### Advantages & Disadvantages of the Density Plot
+
+The density plot makes it extremely easy to see the distribution of the data, including skewness and modality.
+
+Generally, the smoothness of density plots relies on the chosen bandwidth, a potential disadvantage.
+
+Factor Variable
+-
+### Trends in the Data
+
+Important to note first is that I have filtered the data for each graphical representation by frequency. For instance, for the pie chart and tree map, I've limited the country codes to those with the top ten highest counts / frequencies and, for the bar chart, the top twenty. I decided to do this since there were too many countries present at the race, decreasing the efficacy of the graphs. Moreover, with some countries having such low frequencies, especially relative to USA, their presences on the graphs became insignificant and/or unnoticeable.
+
+Nevertheless, the United States dominated in frequency, as expected. Surprisingly, however, the subsequent countries are not geographically neighboring countries in respect to the US. As shown on the graphs, the following countries after the US are Italy, France, and the United Kingdom.
+
+### Pie Chart
+``` {r factor_pie}
+top10_country_data = marathon %>%
+  count(countryCode) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 10) %>%
+  na.omit()
+
+ggplot(top10_country_data, aes(x = "", y = n, fill = countryCode)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar(theta = "y") +
+  labs(title = "Country Distribution of Marathon Runners", fill = "Country Code") +
+  theme_void()
+```
+
+#### Advantages & Disadvantages of the Pie Chart
+
+The pie chart offers a good sense of relative frequencies for each country in a very straightforward and clear manner, especially when looking at the most frequent values. The pie chart is also visually appealing with a diverse color palette. However, the pie chart does not provide a sense of the count for each value. As mentioned in the overall data trends, the pie chart is limited to frequent values as less frequent values may become too small to visualize.
+
+### Bar Chart
+``` {r factor_bar}
+top20_country_data = marathon %>%
+  count(countryCode) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 20) %>%
+  na.omit()
+
+ggplot(top20_country_data, aes(x = reorder(countryCode, -n), y = n)) + 
+  geom_bar(stat = "identity", fill = "skyblue", color = "white") +
+  labs(title = "Country Distribution of Marathon Runners",
+       x = "Country Code", y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+#### Advantages & Disadvantages of the Bar Chart
+
+Like the pie chart, the bar chart also provides a clear picture of relative frequencies for each value. Unlike the pie chart, we also have a better idea of the actual counts of each values.
+
+### Tree Map
+``` {r factor_tree}
+library(treemapify)
+
+country_counts <- as.data.frame(table(marathon$countryCode))
+colnames(country_counts) <- c("Country", "Count")
+
+top_10 <- country_counts[order(-country_counts$Count), ][1:10, ]
+
+ggplot(top_10, aes(area = Count, fill = Country, label = Country)) +
+  geom_treemap() +
+  geom_treemap_text(grow = FALSE, color = "white") +
+  theme_minimal()
+```
+
+#### Advantages & Disadvantages of the Tree Map
+
+Similar to the previous two graphs, the tree map offers a good sense of relative frequencies. Similar to the pie chart, the color palette is also appealing as it is matched to specific values. The tree map is also an effective use of space, while representing a visual hierarchy of values. However, less frequent values may become too small visualize on the tree map, which is why I limited the values shown to the top ten most frequent. Again, like the pie chart, the tree map does not offer a convenient way to access the actual counts for each value.
+
+Dear Data Graphed with ggplot
+-
+```{r pictograph}
+music = read.csv("/Users/ryanshenton/Documents/1school/Spring 2025/Viz/dataviz-spring2025-organizing-folder/3. Graphing single variables/rjs_listening_time.csv")
+
+ggplot(music, aes(x = Date, y = Time, color = Genre1, shape = Artist1))+
+  geom_point(size = 4) +
+  labs(title = "Spotify Listening Time Across Days with Genre and Artist Encodings",
+       x = "Day", y = "Listening Time (Minutes)",
+       color = "Top Genre", shape = "Top Artist") +
+  theme_minimal()
+```
+
+![Ryan's Spotify Listening Habits 2/2 - 2/8](dear_data_rjs.png)
+
+With the original hand-drawn graph and ggplot graph in juxtaposition, it is clear to see that I had to simplify my original graph. The main changes that occurred were to how many values I was able to encode. Instead of encoding top three genres and top three artists for each day, I decided to simplify that to top genre and top artist for each day. Although I could have made a faceted plot perhaps for each genre or for each artist, I thought that this might become distracting. Another major change to the graph was the graph itself, particularly what type of graph. Originally I used a pictograph to encode the main numeric variable (listening time), but in ggplot I used a dot plot with the y-axis containing listening time. This was a more convenient and ideal representation for a computer-generated graphical representation. Ultimately, the ggplot graph still gives and accurate and complete representation of my listening habits throughout the week. 
