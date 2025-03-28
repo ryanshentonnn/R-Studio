@@ -1,0 +1,27 @@
+---
+title: "Dear Data Assignment"
+author: "Ryan Shenton"
+format: html
+editor: source
+theme: lux
+cache: true
+---
+---
+
+For the Dear Data project, I mined my Spotify account listening history via a third-party application, Trackify. Through the help of this app, I was able to collect data to answer the following two questions:
+
+#### 1. How much time do I spend listening to music throughout the week?
+
+#### 2. What are my top genres and artists each day of the week?\
+
+With the data from Trackify, I created a visual representation of my listening history, namely a pictograph to put it simply.
+
+![RJS' Listening History 2/2-2/8](dear_data_rjs)
+
+The data that I encoded into the graph includes my listening time, top three genres, and top three artists for each day. As told by the key, the listening time is represented by the various music notes, each with a designated value in minutes. Relative to each other, the notes also appropriately represent lengths of time. For example, the whole note is the longest held note out of those shown and represents the longest amount of time (120 minutes), while the thirty-second note is the shortest held note out of these and represents the shortest amount of time (1 minute). Notably, I had to round my listening time for each day to the nearest minute.
+
+Likewise, the key indicates that my top three genres for each day are represented by the various symbols. On each day's index card, the genre symbols can be found on both left and right sides adjacent to the borders. The order of these genres can also be discerned as the symbol closest to the top is the most played genre of the day, while closest to the bottom is the third most played. For instance, pop was my number one genre for every day of the week aside from Saturday.
+
+Lastly, my top three artists are respresented by distinct colors. Like the top three genres, you can determine my first, second, and third artists from their position from top to bottom. To offer an example, you may notice that The Weeknd was my top artist on Tuesday, Wednesday, Thursday, and Saturday.
+
+Ultimately, I was satisfied by the results of this project. I think deciphering the listening time was most intuitive, especially with a familiarity with sheet music or music notes. However, with a quick reference to the key it is not too hard to determine my top three genres and artists. Additionally, I wish the index cards for each day could be aligned in a more appropriate fashion. Since time is often perceived as a linear construct, it may seem awkward having to read Sunday down to Wednesday, then turn your attention back to the top for Thursday.  Clearly, SZA, Doechii, and The Weeknd hold a place in my heart, and I am excited to see how my new-found perspective influences the way I select my music.
