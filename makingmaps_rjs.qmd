@@ -1,0 +1,277 @@
+---
+title: "DATS 2102 -- Making Maps"
+author: "Ryan Shenton"
+format: html
+editor: visual
+theme: cosmo
+---
+
+```{r Libraries, include = FALSE}
+library(socviz)
+library(sf)
+library(ggplot2)
+library(tidyverse)
+library(ggplot2)
+library(RCPA3)
+library(dplyr)
+library(maps)
+library(ggthemes)
+library(RColorBrewer)
+
+# Note that data originates from respective libraries
+```
+
+## Question 1
+
+### Using a simple feature dataframe, generate a map of the geography you will be mapping.
+
+```{r Continuous Variable}
+
+us_states <- st_as_sf(map("state", plot = FALSE, fill = TRUE))
+
+# Inspect structure of the shapefile
+print(us_states)
+
+# Create a blank map of U.S. states
+ggplot(us_states) +
+  geom_sf(fill = "white", color = "black") +
+  theme_minimal() +
+  ggtitle("Blank Map of the United States")
+
+
+data(states)
+states_data <- as.data.frame(states)
+
+smoker_rate <- states_data %>% select(smokers)
+
+state_names <- c("Alabama", "Alaska", "Arizona", "Arkansas", "California", 
+                 "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+                 "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
+                 "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+                 "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+                 "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                 "New Jersey", "New Mexico", "New York", "North Carolina",
+                 "North Dakota", "Ohio", "Oklahoma", "Oregon", 
+                 "Pennsylvania", "Rhode Island", "South Carolina",
+                 "South Dakota", "Tennessee", "Texas", 
+                 "Utah", "Vermont", "Virginia", 
+                 "Washington", "West Virginia", 
+                 "Wisconsin", "Wyoming")
+
+```
+
+### Using left_join(), join some data to map to your simple feature dataframe, and generate a thematic map/choropleth of your variable using a gradient color scheme.
+
+```{r Continuous Choropleth w/ Gradient Scheme}
+
+smoker_data <- smoker_rate %>%
+  mutate(StateName = state_names)
+
+unique(us_states$ID)
+unique(smoker_data$StateName) 
+
+# I used the unique function to understand why my code wasn't running -- us_states has 49 entries / rows while smoker_data has 50 -- so the unique function helped me realize that us_states was strictly the continental states and included DC. Hence, the filters directly below
+
+us_states <- us_states %>% filter(ID != "district of columbia")
+smoker_data <- smoker_data %>% filter(StateName != "Alaska")
+smoker_data <- smoker_data %>% filter(StateName != "Hawaii")
+
+us_states <- us_states %>%
+  left_join(smoker_data, by = c("ID" = "StateName"))
+
+ggplot(us_states) +
+  geom_sf(aes(fill = smoker_data$smokers), color = "black") +
+  scale_fill_gradient(low = "lightblue", high = "slateblue", name = "Smoking Rate (%)") +
+  theme_minimal() +
+  ggtitle("Smoking Rates by U.S. States (Gradient Color Scale)")
+
+```
+
+### Describe the patterns in your map. What story are you communicating with your map? Does the map effectively communicate your story? Why or why not?
+
+The map effectively communicates a piece of the culture of each state. Although seemingly trivial, the percent of people that smoke cigarettes in a certain area may reveal plenty about the shared values of the area. For example, the lightest colored stated on the map (fewest percent of cigarette smokers), Utah, is a state where many people pride themselves on a typically higher standard of religious morality since much of the population participates in mormonism or the Church of Latter Day Saints. Conversely, a notably darker state, West Virginia, is home to a strong Appalachian culture and a large population of blue collar workers, but is also low-ranking in regards to education, infrastructure, and economy. I think the cultures of the aforementioned states offer thorough explanations for the percents of cigarette smokers.
+
+This map might indicate, along with a state's culture, the presence of general health education. As mentioned, West Virginia along with other deep Appalachian and central United States states, trend lower in education standards. This could also explain why these states are darker than Washington, California, Massachusetts, and New York, for instance. Overall, I think that the gradient color scale is extremely appropriate for mapping a continuous variable.
+
+### Modify your thematic map in 1b but changing from a gradient color scheme to a classed color scheme.
+
+```{r Continuous Choropleth w/ Classed Scheme}
+
+us_states <- us_states %>%
+  mutate(smoking_class = cut(smoker_data$smokers, 
+                             breaks = c(0, 12, 16, 20, 25, Inf), 
+                             labels = c("Very Low (<12%)", "Low (12-16%)", "Moderate (16-20%)", 
+                                        "High (20-25%)", "Very High (>25%)")))
+
+ggplot(us_states) +
+  geom_sf(aes(fill = smoking_class), color = "black") +
+  scale_fill_brewer(palette = "OrRd", name = "Smoking Rate") +
+  theme_minimal() +
+  ggtitle("Smoking Rates by U.S. States (Classed Color Scale)")
+
+```
+
+### How does the new choice affect the map? Does the original or modified approach better represent the data? Why?
+
+Like the gradient color scale choropleth, the classed color scale choropleth reveals different aspects of each state, particularly culture and education. However, the classified choropleth makes it easier to identify general trends. For example, although we already know that West Virginia is the state with the highest percent of cigarette smokers, the fact that it is the only dark red state (very high class) highlights how uncommon this percent is amongst other states. Maybe cigarette smoking is simply a cornerstone of West Virginian culture. There are also only three states in the very low class, Washington, California, and Utah. Although we already attempted to justify why Utah's percent is so low, this choropleth suggests that there might be a general difference in how people on the east coast versus how people on the west coast view cigarettes.
+
+Ultimately, while I think both the gradient and classed choropleths are two appropriate choices for a continuous variable measured across a geographic region, I do think that the classed choropleth allows for a more convenient analysis of general trends. It seems fitting that states in the same region will fall into the same class, so what does it mean when a single state deviates in class from its adjacent states? Conversely, the gradient choropleth might encourage more detailed comparisons between states.
+
+## Question 2
+
+### Using a simple feature dataframe, generate a map of the geography you will be mapping
+
+```{r Factor Variable}
+
+us_states <- st_as_sf(map("state", plot = FALSE, fill = TRUE))
+
+print(us_states)
+
+ggplot(us_states) +
+  geom_sf(fill = "white", color = "black") +
+  theme_minimal() +
+  ggtitle("Blank Map of the United States")
+
+
+data(states)
+states_data <- as.data.frame(states)
+
+weed_data <- states_data %>% select(pot.policy)
+
+state_names <- c("Alabama", "Alaska", "Arizona", "Arkansas", "California", 
+                 "Colorado", "Connecticut", "Delaware", "Florida", "Georgia",
+                 "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa", 
+                 "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland",
+                 "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+                 "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
+                 "New Jersey", "New Mexico", "New York", "North Carolina",
+                 "North Dakota", "Ohio", "Oklahoma", "Oregon", 
+                 "Pennsylvania", "Rhode Island", "South Carolina",
+                 "South Dakota", "Tennessee", "Texas", 
+                 "Utah", "Vermont", "Virginia", 
+                 "Washington", "West Virginia", 
+                 "Wisconsin", "Wyoming")
+
+```
+
+### Using left_join(), join some data to map to your simple feature dataframe, and generate a thematic map/choropleth of your variable using a sequential color scheme.
+
+```{r Factor Choropleth w/ Sequential Scheme}
+
+weed_data <- weed_data %>%
+  mutate(StateName = state_names)
+
+us_states <- us_states %>% filter(ID != "district of columbia")
+weed_data <- weed_data %>% filter(StateName != "Alaska")
+weed_data <- weed_data %>% filter(StateName != "Hawaii")
+
+# Needed the statements below with the tolower function since the join is case sensitive here
+us_states$ID <- tolower(us_states$ID) 
+weed_data$StateName <- tolower(weed_data$StateName)
+
+us_states <- us_states %>%
+  left_join(weed_data, by = c("ID" = "StateName"))
+
+# Checking if the join was successful since it wasn't earlier
+us_states$pot.policy
+
+us_states$pot.policy <- factor(us_states$pot.policy, ordered = TRUE)
+
+ggplot(us_states) +
+  geom_sf(aes(fill = pot.policy), color = "black") +
+  scale_fill_brewer(palette = "Blues") +  # Sequential color scheme
+  theme_minimal() +
+  ggtitle("Marijuana Policy Across U.S. States (Sequential Color Scheme)") +
+  labs(fill = 'Policy') +
+  theme(legend.title = element_text(size = 12), legend.text = element_text(size = 10))
+
+```
+
+### Describe the patterns in your map. What story are you communicating with your map? Does the map effectively communicate your story? Why or why not?
+
+Notably, all of the dark blue states with no legal marijuana access lean more conservative, while many of the more liberal states are very light blue and open to recreational marijuana use. This shift in political ideology shines clear in this graph. Another view one might take is that the states with larger urban areas / populations (New York, Illinois, California, Washington, etc.) tend to have looser restrictions on marijuana accessibility.
+
+With that said, the sequential color scheme seems to work well for this specific factor variable since it has some order; as the colors get lighter, the marijuana access laws grow more liberal and permissive. Thus, this factor variable is ordered by the intensity of restrictions, strict to permissive. The sequential color scheme also seems fitting to analyze trends over time. As it is unlikely a state's policies will shift from strict to permissive immediately, it is much more plausible that a state's policies will shift according to the sequence of the key (state policies will slowly shift darker or slowly shift lighter as opposed to go from light to dark). On the other hand, it is a clear that a sequential color scheme may be misleading if one used it to map an unordered factor variable.
+
+### Modify your thematic map in 2b, changing from a sequential color scheme to a divergent color scheme.
+
+```{r Factor Choropleth w/ Divergent Scheme}
+
+# Define broad categories for divergent mapping
+us_states <- us_states %>%
+  mutate(pot_policy_class = case_when(
+    pot.policy %in% c("Medical marijuana law") ~ "Limited Accessibility",
+    pot.policy %in% c("Adult & medical use") ~ "High Accessibility",
+    pot.policy %in% c("CBT/Low THC product law") ~ "Limited Accessibility",
+    pot.policy %in% c("No marijuana access law") ~ "No Accessibility"
+  ))
+
+us_states$pot_policy_class <- factor(us_states$pot_policy_class, 
+                                     levels = c("No Accessibility", "Limited Accessibility", "High Accessibility"))
+
+# Generate classed choropleth with a divergent color scheme
+ggplot(us_states) +
+  geom_sf(aes(fill = pot_policy_class), color = "black") +
+  scale_fill_manual(values = c("tomato1", "tan3", "olivedrab")) +  # Divergent colors
+  theme_minimal() +
+  ggtitle("Marijuana Policy Across U.S. States (Divergent Color Scheme)") +
+  labs(fill = 'Policy Class') +
+  theme(legend.title = element_text(size = 12), legend.text = element_text(size = 10))
+
+```
+
+### How does the new choice affect the map? Does the original or modified approach better represent the data? Why?
+
+I think that both the sequential and divergent color schemes offer insightful conclusions, but both work best with ordered factor variables. Unlike the sequential choropleth, the divergent choropleth provides a clear middle ground, which is the 'Limited Accessibility' class on this choropleth. The divergent color scheme is particularly successful at uncovering outliers: which states have the most permissive marijuana policies? The most strict?
+
+For this factor variable, I prefer the divergent color scheme since it avoids small nuances or distinctions in policy differences between states. However, this lack of nuance may also be seen as a disadvantage if the viewer seeks to conduct a more detailed analysis. Moreover, the red to green scale with brown in the middle also feels more intuitive when talking about strict to permissive policies, emphasizing major differences in policy types.
+
+## Question 3
+
+### Using the thematic map you made in either 1b or 2b, use the colorblindr package to assess how your map appears under different forms of color vision deficiency.
+
+```{r colorblindr}
+library(colorblindr)
+```
+
+```{r Color Blind Analysis}
+
+choropleth <- ggplot(us_states) +
+  geom_sf(aes(fill = pot.policy), color = "black") +
+  scale_fill_brewer(palette = "Blues", na.value = "gray") +  
+  theme_void() +
+  labs(fill = ' ')
+
+# Avoided too many graph / choropleth details to clear space
+
+# Generate colorblindness simulation
+cvd_grid(choropleth)
+```
+
+### Are there problems with your original color scheme? If so, what are the problems, and what could you do to improve the map to make it more accessible?
+
+No; since the original sequential color scheme varies by saturation and hue rather than color, in all shown types of color blindness, the differences between each factor is still apparent. Darker states still represent stricter marijuana policies and lighter states still represent more permissive marijuana policies.
+
+### Wilke discusses color vision deficiency in section 19.3 of his book. Try using the Okabe-Ito scale recommended in that section on your map.
+
+```{r Okabe-Ito Choropleth}
+
+# Okabe-Ito colorblind-friendly palette
+okabe_ito_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442")
+
+# Update thematic map with Okabe-Ito colors
+choropleth_okabe <- ggplot(us_states) +
+  geom_sf(aes(fill = pot.policy), color = "black") +
+  scale_fill_manual(values = okabe_ito_palette, na.value = "gray") +  
+  theme_void() +
+  labs(fill = ' ')
+
+# Check new map's accessibility
+cvd_grid(choropleth_okabe)
+```
+
+### Does it improve your map? Why or why not?
+
+I actually find that the Okabe-Ito scale makes it harder to interpet the choropleth in some cases. The Desaturated choropleth is especially hard to read since the brightness of each class seemed to become less differentiable and almost monotonal. Conversely, I think the updated Tritanomaly choropleth is very successful in distinguishing the factors. However, by making the factors easier to distinguish, it loses its portrayal of the gradient sequence from strict policies to permissive polices. For instance, no access to some access is represented by light red to dark blue.
+
+Ultimately, it is likely that color blind individuals would prefer the Okabe-Ito color scheme choropleth, as the factors separate not only in hue, but in color, making them easier to distinguish.
